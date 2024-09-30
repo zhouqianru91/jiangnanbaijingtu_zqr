@@ -26,7 +26,7 @@ name_list <- page %>%
   html_text() %>% 
   str_split("\\n")
 
-name_list_total_tian <- c()
+name_list_total <- c()
 
 for(i in 1:length(name_list)){
   # print(name_list[[i]])
@@ -34,11 +34,11 @@ for(i in 1:length(name_list)){
      name <- name_list[[i]][j] 
      # print(name)
     if(!name %>% str_detect("[A-Z]+") ){
-      name_list_total_tian <- c(name_list_total_tian,name)
+      name_list_total <- c(name_list_total,name)
     }
   }
 }
-df_name_list <- rbind (df_name_list, data.frame(name = name_list_total_tian, user_cat = "天级角色"))
+df_name_list <- rbind (df_name_list, data.frame(name = name_list_total, user_cat = "天级角色"))
 
 ## 侯级
 url <- "https://wiki.biligame.com/jiangnan/%E5%88%86%E7%B1%BB:%E4%BE%AF%E7%BA%A7%E8%A7%92%E8%89%B2"
@@ -49,7 +49,7 @@ name_list <- page %>%
   html_text() %>% 
   str_split("\\n")
 
-name_list_total_ho <- c()
+name_list_total <- c()
 
 for(i in 1:length(name_list)){
   # print(name_list[[i]])
@@ -57,11 +57,11 @@ for(i in 1:length(name_list)){
      name <- name_list[[i]][j] 
      # print(name)
     if(!name %>% str_detect("[A-Z]+") ){
-      name_list_total_ho <- c(name_list_total_ho,name)
+      name_list_total <- c(name_list_total,name)
     }
   }
 }
-df_name_list <- rbind (df_name_list, data.frame(name = name_list_total_ho, user_cat = "侯级角色"))  
+df_name_list <- rbind (df_name_list, data.frame(name = name_list_total, user_cat = "侯级角色"))  
 
 ## 卿级
 url <- "https://wiki.biligame.com/jiangnan/%E5%88%86%E7%B1%BB:%E5%8D%BF%E7%BA%A7%E8%A7%92%E8%89%B2"
@@ -72,7 +72,7 @@ name_list <- page %>%
   html_text() %>% 
   str_split("\\n")
 
-name_list_total_qin <- c()
+name_list_total <- c()
 
 for(i in 1:length(name_list)){
   # print(name_list[[i]])
@@ -80,11 +80,11 @@ for(i in 1:length(name_list)){
      name <- name_list[[i]][j] 
      # print(name)
     if(!name %>% str_detect("[A-Z]+") ){
-      name_list_total_qin <- c(name_list_total_qin,name)
+      name_list_total <- c(name_list_total,name)
     }
   }
 }
-df_name_list <- rbind (df_name_list, data.frame(name = name_list_total_qin, user_cat = "卿级角色"))   
+df_name_list <- rbind (df_name_list, data.frame(name = name_list_total, user_cat = "卿级角色"))   
 
 ## 士级
 url <- "https://wiki.biligame.com/jiangnan/%E5%88%86%E7%B1%BB:%E5%A3%AB%E7%BA%A7%E8%A7%92%E8%89%B2"
@@ -99,29 +99,37 @@ name_list <- page %>%
 
 name_list <- name_list[!name_list == ""]
 
-name_list_total_shi <- c()
+name_list_total <- c()
 
 for(i in 1:length(name_list)){
   for (j in 1:length(name_list[[i]])){
      name <- name_list[[i]][j] 
     if(!name %>% str_detect("[A-Z]+") ){
-      name_list_total_shi <- c(name_list_total_shi,name)
+      name_list_total <- c(name_list_total,name)
     }
   }
 }
-df_name_list <- rbind (df_name_list, data.frame(name = name_list_total_shi, user_cat = "士级角色"))     
+df_name_list <- rbind (df_name_list, data.frame(name = name_list_total, user_cat = "士级角色"))     
 
-rm(name_list_total_tian)
-rm(name_list_total_ho)
-rm(name_list_total_qin)
-rm(name_list_total_shi)
+df_name_list <- df_name_list %>% 
+  unique()
+
+rm(name_list_total)
+
+rm(collection_info)
+rm(href_info)
+rm(i)
+rm(j)
+rm(name)
+rm(name_list)
+rm(url)
+rm(page)
 ```
 
 
 
 ## 1.2 爬虫
 ```{r}
-
 url <- "https://wiki.biligame.com/jiangnan/%E8%A7%92%E8%89%B2%E5%9B%BE%E9%89%B4"
 page <- read_html(url)
 
@@ -137,7 +145,7 @@ href_info <- page %>%
 df <- data.frame(collection_info,href_info) %>% 
   mutate(url = paste0('https://wiki.biligame.com',href_info))
 
-df
+head(df)
 ```
 
 
@@ -176,9 +184,9 @@ for (i in 1:nrow(df)) {
     
     ## 表格信息 包括属性 + 书籍
     property <- page %>%
-    html_nodes(".col-xs-12.col-sm-8.col-md-4.col-lg-4") %>%
-    html_text() %>% 
-    .[1]
+      html_nodes(".col-xs-12.col-sm-8.col-md-4.col-lg-4") %>%
+      html_text() %>% 
+      .[1]
     property <- property %>% str_split('升阶') %>% 
       .[[1]] %>% 
       .[2] %>% 
@@ -207,7 +215,7 @@ for (i in 1:nrow(df)) {
     tianfu_list <- node_info[1] %>% 
       str_split('\\n') %>% 
       .[[1]]
-    tianfu_list <- tianfu_list[!tianfu == ""]
+    tianfu_list <- tianfu_list[!tianfu_list == ""]
     user_info$tianfu = tianfu_list[1] %>% str_split("展/折") %>% .[[1]] %>% .[1] %>% str_split("：") %>% .[[1]] %>% .[2]
     user_info$tianfu_2star = tianfu_list[2]
     user_info$tianfu_4star = tianfu_list[3]
@@ -241,10 +249,20 @@ for (i in 1:nrow(df)) {
     
     df_user_info = rbind(df_user_info, user_info)
   }
-  
   else next 
-  
 }
+
+rm(books)
+rm(collection_info)
+rm(href_info)
+rm(i)
+rm(mw_headline_info)
+rm(node_info)
+rm(property)
+rm(random_sleep)
+rm(tianfu_list)
+rm(url)
+rm(user_desc)
 ```
 
 ```{r}
@@ -268,7 +286,7 @@ df_user_network %>% write.csv("df_user_network.csv", row.names = F)
 # 2.珍宝
 
 
-## 2.1 珍宝类型
+## 珍宝类型
 ```{r}
 df_zhenbao_list <- data.frame()
 
@@ -293,7 +311,7 @@ for(i in 1:length(name_list)){
     }
   }
 }
-df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total_tian, user_cat = "天级珍宝"))   
+df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total_tian, cat = "天级珍宝"))   
 
 
 ## 侯级
@@ -321,7 +339,7 @@ for(i in 1:length(name_list)){
     }
   }
 }
-df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, user_cat = "侯级珍宝"))   
+df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, cat = "侯级珍宝"))   
 
 ## 卿级
 url <- "https://wiki.biligame.com/jiangnan/%E5%88%86%E7%B1%BB:%E5%8D%BF%E7%BA%A7%E7%8F%8D%E5%AE%9D"
@@ -344,7 +362,7 @@ for(i in 1:length(name_list)){
     }
   }
 }
-df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, user_cat = "卿级珍宝"))   
+df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, cat = "卿级珍宝"))   
 
 ## 专属
 url <- "https://wiki.biligame.com/jiangnan/%E5%88%86%E7%B1%BB:%E4%B8%93%E5%B1%9E%E7%8F%8D%E5%AE%9D"
@@ -367,16 +385,30 @@ for(i in 1:length(name_list)){
     }
   }
 }
-df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, user_cat = "专属珍宝"))   
+df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, cat = "专属珍宝"))   
 
-rm(name_list_total_tian)
+df_zhenbao_list <- df_zhenbao_list %>% 
+  unique()
+rm(zhenbao_list_total_tian)
 rm(zhenbao_list_total)
+
+rm(books)
+rm(collection_info)
+rm(href_info)
+rm(i)
+rm(mw_headline_info)
+rm(node_info)
+rm(property)
+rm(random_sleep)
+rm(tianfu_list)
+rm(url)
+rm(user_desc)
 ```
 
 
 
 
-## 1.2 爬虫
+## 珍宝爬虫
 
 ```{r}
 
@@ -396,5 +428,129 @@ df <- data.frame(collection_info,href_info) %>%
   mutate(url = paste0('https://wiki.biligame.com',href_info))
 
 df
+```
+
+
+
+```{r}
+df_zhenbao_info = data.frame()
+df_zhenbao_property = data.frame()
+df_zhenbao_tianfu = data.frame()
+
+for (i in 1:nrow(df)) { 
+  
+  random_sleep <- runif(n=1, min=1, max=5)
+  Sys.sleep(random_sleep)
+  
+  ## url
+  url <- df$url[i]
+  page <- read_html(url)
+  print(url)
+  
+  mw_headline_info <- page %>%
+  html_nodes(".mw-headline") %>%
+    html_text()
+  
+  if (!TRUE %in% str_detect(mw_headline_info,"删除")) {
+  
+    ## 用户名称
+    firstHeading <- page %>%
+      html_nodes("[id='firstHeading']") %>%
+      html_text()
+    zhenbao_info = data.frame(firstHeading = firstHeading )  
+    print(firstHeading)
+
+    ## 表格信息 包括属性 
+    property_list <- page %>%
+    html_nodes(".col-xs-12.col-sm-8.col-md-4.col-lg-4") %>%
+    html_text() %>% 
+    .[1] %>% 
+      str_split('五十') %>% 
+      .[[1]] %>% 
+      .[2] %>% 
+      str_split('\\n') %>% 
+      .[[1]] 
+    property <- property_list[2:26]
+    zhenbao_property <- as.data.frame(matrix(unlist(property), ncol = 5, byrow = TRUE)) 
+    zhenbao_property$firstHeading <- firstHeading
+    df_zhenbao_property <- rbind(df_zhenbao_property, zhenbao_property)
+  
+    ## 专珍归属人物
+    property_user <- property_list[!property_list == '']
+    user_name <- str_trim(property_user[length(property_user)] %>% str_split('.png') %>% .[[1]] %>% .[2])
+    zhenbao_info$user_name <- user_name
+    
+    ## 天赋 + 简介
+    node_info <- page %>%
+      html_nodes(".col-xs-12.col-sm-8.col-md-8.col-lg-8") %>%
+      html_text() %>% 
+      str_trim()
+    node_info
+    lvl_str <- str_split(node_info, '\\n') %>% .[[1]] %>% .[1] 
+    lvl_str <- substr(lvl_str,3,nchar(lvl_str))
+    lvl_str <- lvl_str %>% str_split(pattern = "\\+") %>% .[[1]] 
+    lvl_str <- lvl_str[!lvl_str == '']
+    lvl_str <- c( c("初始") , lvl_str)
+    node_info <- str_split(node_info, '\\n') %>% .[[1]] %>% .[length(.)]
+    node_info
+    tianfu <- substr(node_info, 1,5) 
+    node_info <- str_split(node_info,pattern = tianfu)[[1]]
+    node_info
+    node_info <- node_info[!node_info == '']
+    node_info
+    node_info <- data.frame(node_info)
+    node_info
+    node_info[c('tianfu_property','zhuangbei_property')] = str_split_fixed(node_info$node_info,paste0(user_name,"装备时"),2)
+    node_info
+    node_info$zhenbao_name = firstHeading
+    node_info
+    node_info$tianfu = tianfu
+    node_info
+    node_info$zhenbao_lvl = lvl_str
+    node_info
+    df_zhenbao_tianfu <- rbind(df_zhenbao_tianfu,node_info)
+    
+    ## 描述
+    zhenbao_desc <- page %>%
+      html_nodes("[style*='text-align: left;padding:10px']") %>%
+      html_text()
+    zhenbao_desc <- str_trim(zhenbao_desc)
+    zhenbao_info$zhenbao_desc = zhenbao_desc
+    df_zhenbao_info <- rbind(df_zhenbao_info, zhenbao_info)
+  }
+  else next 
+}
+
+rm(books)
+rm(collection_info)
+rm(href_info)
+rm(i)
+rm(mw_headline_info)
+rm(node_info)
+rm(property)
+rm(random_sleep)
+rm(tianfu_list)
+rm(url)
+rm(user_desc)
+```
+```{r}
+df_zhenbao_info <- df_zhenbao_info  %>% left_join(df_zhenbao_list, by = c( 'firstHeading' = 'name'))
+df_zhenbao_property 
+df_zhenbao_tianfu 
+```
+## 存入数据
+```{r}
+df_zhenbao_info %>% write.csv("df_zhenbao_info.csv",row.names = F)
+df_zhenbao_property %>% write.csv("df_zhenbao_property.csv",row.names = F)
+df_zhenbao_tianfu %>% write.csv("df_zhenbao_tianfu.csv",row.names = F)
+```
+
+
+
+
+
+```{r}
+# https://www.taptap.cn/moment/470232763660763863
+# https://docs.qq.com/sheet/DWnB6RGZBSmVkVWVQ?tab=ss_gww2lc&viewId=v5HdWy
 ```
 

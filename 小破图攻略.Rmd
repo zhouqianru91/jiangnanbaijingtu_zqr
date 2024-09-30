@@ -13,10 +13,22 @@ library(igraph)
 ```
 
 ```{r}
-# df_user_info <- read_csv("df_user_info.csv")
-# df_user_property <- read_csv("df_user_property.csv")
-# df_user_network <- read_csv("df_user_network.csv")
+df_user_info <- read_csv("df_user_info.csv")
+df_user_property <- read_csv("df_user_property.csv")
+df_user_network <- read_csv("df_user_network.csv")
+
+df_zhenbao_info <- read_csv("df_zhenbao_info.csv")
+df_zhenbao_property <- read_csv("df_zhenbao_property.csv")
+df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv")
+
 ```
+
+
+
+```{r}
+df_user_info
+```
+
 
 ```{r}
 
@@ -30,4 +42,8 @@ plot(network, layout=layout.random, main="random")
 plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
 ```
 
+```{r}
+df_城市分配表 <- read_excel("data/城市分配表.xlsx", 
+    skip = 1)
+```
 
