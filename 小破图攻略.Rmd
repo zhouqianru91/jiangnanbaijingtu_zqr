@@ -1,7 +1,7 @@
 ---
 title: "小破图攻略"
 output: html_document
-date: "2024-09-24"
+date: "2024-09-30"
 ---
 
 ```{r setup, include=FALSE}
@@ -9,10 +9,25 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(radiant)
 library(rvest)
+library(igraph)
 ```
 
-## 
+```{r}
+# df_user_info <- read_csv("df_user_info.csv")
+# df_user_property <- read_csv("df_user_property.csv")
+# df_user_network <- read_csv("df_user_network.csv")
+```
+
 ```{r}
 
+# create the network object
+network <- graph_from_data_frame(d=df_user_network, directed=T) 
+
+# plot it
+plot(network, layout=layout.sphere, main="sphere")
+plot(network, layout=layout.circle, main="circle")
+plot(network, layout=layout.random, main="random")
+plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
 ```
+
 
