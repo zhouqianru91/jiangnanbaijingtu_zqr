@@ -554,3 +554,11 @@ df_zhenbao_tianfu %>% write.csv("df_zhenbao_tianfu.csv",row.names = F)
 # https://docs.qq.com/sheet/DWnB6RGZBSmVkVWVQ?tab=ss_gww2lc&viewId=v5HdWy
 ```
 
+
+
+# 3.别人的搭配
+
+```{r}
+
+```
+
