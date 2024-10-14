@@ -12,38 +12,99 @@ library(rvest)
 library(igraph)
 ```
 
-```{r}
-df_user_info <- read_csv("df_user_info.csv")
-df_user_property <- read_csv("df_user_property.csv")
-df_user_network <- read_csv("df_user_network.csv")
 
-df_zhenbao_info <- read_csv("df_zhenbao_info.csv")
-df_zhenbao_property <- read_csv("df_zhenbao_property.csv")
-df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv")
-
+## 导入数据
+```{r, warning=FALSE, message=FALSE}
+# df_user_info <- read_csv("df_user_info.csv") %>% unique()
+# df_user_property <- read_csv("df_user_property.csv") %>% 
+#   unique() %>% 
+#   mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
+# df_user_network <- read_csv("df_user_network.csv") %>% unique()
+# 
+# df_zhenbao_info <- read_csv("df_zhenbao_info.csv") %>% unique()
+# df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique() 
+# df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv") %>% unique()
 ```
-
-
 
 ```{r}
 df_user_info
+df_user_property
+df_user_network
+
+df_zhenbao_info
+df_zhenbao_property
+df_zhenbao_tianfu
+```
+
+```{r}
+cities <- c('应天',"苏州","杭州","松江","徽州","绍兴","宁波")
+skills <- c('农牧',"制作","建造","探险","理财")
+```
+
+
+## 人物关系
+
+```{r}
+# 
+# # create the network object
+# network <- graph_from_data_frame(d=df_user_network, directed=T) 
+# 
+# # plot it
+# plot(network, layout=layout.sphere, main="sphere")
+# plot(network, layout=layout.circle, main="circle")
+# plot(network, layout=layout.random, main="random")
+# plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
+```
+
+
+## 城市分配
+
+
+```{r}
+df_user_info_temp <- data.frame()
+for (i in cities){
+  print(i)
+  df_user_info_temp <- df_user_info %>%
+    select(firstHeading,tianfu_4star) %>% 
+    mutate(city = str_extract(tianfu_4star,i)) %>% 
+    filter(!is.na(city)) %>% 
+    rbind(df_user_info_temp,.)
+}
+df_user_info_temp
+```
+```{r}
+df_user_info_temp <- data.frame()
+for (i in skills){
+  print(i)
+  df_user_info_temp <- df_user_info %>%
+    select(firstHeading,tianfu_4star) %>% 
+    mutate(skill = str_extract(tianfu_4star,i)) %>% 
+    filter(!is.na(skill)) %>% 
+    rbind(df_user_info_temp,.)
+}
+df_user_info_temp
+```
+
+
+
+```{r}
+df_user_property %>% 
+  select(firstHeading,property_type,property_degree) %>% 
+  spread(property_type,property_degree)
 ```
 
 
 ```{r}
-
-# create the network object
-network <- graph_from_data_frame(d=df_user_network, directed=T) 
-
-# plot it
-plot(network, layout=layout.sphere, main="sphere")
-plot(network, layout=layout.circle, main="circle")
-plot(network, layout=layout.random, main="random")
-plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
+df_user_property %>% 
+  select(firstHeading,property_type,property_value_f) %>% 
+  spread(property_type,property_value_f)
 ```
 
+
+
+
 ```{r}
-df_城市分配表 <- read_excel("data/城市分配表.xlsx", 
-    skip = 1)
+# df_城市分配表 <- read_excel("data/城市分配表.xlsx", 
+#     skip = 1)
 ```
 

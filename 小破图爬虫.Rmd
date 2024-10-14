@@ -266,8 +266,9 @@ rm(user_desc)
 ```
 
 ```{r}
-df_user_info <- df_user_info %>% left_join(df_name_list, by = c('firstHeading' = 'name'))
-df_user_property 
+df_user_info <- df_user_info %>% left_join(df_name_list, by = c('firstHeading' = 'name')) 
+df_user_property <- df_user_property %>% 
+  mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
 df_user_network 
 ```
 
@@ -385,10 +386,16 @@ for(i in 1:length(name_list)){
     }
   }
 }
-df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, cat = "专属珍宝"))   
+
+df_zhenbao_list <- rbind (df_zhenbao_list, data.frame(name = zhenbao_list_total, cat = "专属珍宝"))  
 
 df_zhenbao_list <- df_zhenbao_list %>% 
-  unique()
+  mutate(cat = factor(cat,levels = c('专属珍宝','天级珍宝','侯级珍宝','卿级珍宝'))) %>% 
+  group_by(name) %>% 
+  mutate(rn = row_number(cat)) %>% 
+  filter(rn == 1) %>% 
+  select(name,cat)
+
 rm(zhenbao_list_total_tian)
 rm(zhenbao_list_total)
 
@@ -532,9 +539,8 @@ rm(random_sleep)
 rm(tianfu_list)
 rm(url)
 rm(user_desc)
-```
-```{r}
-df_zhenbao_info <- df_zhenbao_info  %>% left_join(df_zhenbao_list, by = c( 'firstHeading' = 'name'))
+
+df_zhenbao_info <- df_zhenbao_info  %>% left_join(df_zhenbao_list, by = c( 'firstHeading' = 'name')) 
 df_zhenbao_property 
 df_zhenbao_tianfu 
 ```
