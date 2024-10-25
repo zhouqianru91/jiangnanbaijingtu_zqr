@@ -115,9 +115,8 @@ df_name_list <- df_name_list %>%
   unique()
 
 rm(name_list_total)
-
-rm(collection_info)
-rm(href_info)
+# rm(collection_info)
+# rm(href_info)
 rm(i)
 rm(j)
 rm(name)
