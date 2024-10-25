@@ -10,10 +10,13 @@ library(tidyverse)
 library(radiant)
 library(rvest)
 library(igraph)
+library(readxl)
 ```
 
 
-## 导入数据
+## 1. 导入数据
+
+
 ```{r, warning=FALSE, message=FALSE}
 # df_user_info <- read_csv("df_user_info.csv") %>% unique()
 # df_user_property <- read_csv("df_user_property.csv") %>% 
@@ -34,44 +37,89 @@ df_user_network
 df_zhenbao_info
 df_zhenbao_property
 df_zhenbao_tianfu
+
+df_城市分配表 <- read_excel("data/城市分配表.xlsx",
+    skip = 1)
 ```
 
 ```{r}
 cities <- c('应天',"苏州","杭州","松江","徽州","绍兴","宁波")
+city_feature <- c("漕运")
 skills <- c('农牧',"制作","建造","探险","理财")
+
+df_city_feature <- data.frame(
+  cities,
+  city_feature = c("","","","","","","漕运")
+)
+df_city_feature
 ```
 
 
-## 人物关系
-
-```{r}
-# 
-# # create the network object
-# network <- graph_from_data_frame(d=df_user_network, directed=T) 
-# 
-# # plot it
-# plot(network, layout=layout.sphere, main="sphere")
-# plot(network, layout=layout.circle, main="circle")
-# plot(network, layout=layout.random, main="random")
-# plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
-```
 
 
-## 城市分配
+
+
+
+
+## 2.城市分配
+
+
+### 天赋城市
 
 
 ```{r}
 df_user_info_temp <- data.frame()
+
+for(user in df_user_info$firstHeading ){
+  # print(user)
+  for (i in cities){
+    for (j in city_feature){
+      for (k in skills){
+        tianfu_4star <- df_user_info[df_user_info$firstHeading == user,]$tianfu_4star
+        df_user_info_temp <- rbind(df_user_info_temp,
+                                   data.frame(firstHeading = user,
+                                        tianfu_4star = tianfu_4star,
+                                        city = str_extract(tianfu_4star,i),
+                                        city_feature = str_extract(tianfu_4star,j),
+                                        skill = str_extract(tianfu_4star,k)
+                                        ))
+      }
+    }
+  }
+}
+
+df_user_info_temp
+
+# df_user_info %>% 
+#   filter(firstHeading == "麦小满")
+```
+
+```{r}
+
+df_user_info_temp_1 <- data.frame()
 for (i in cities){
   print(i)
-  df_user_info_temp <- df_user_info %>%
-    select(firstHeading,tianfu_4star) %>% 
-    mutate(city = str_extract(tianfu_4star,i)) %>% 
+  df_user_info_temp_1 <- df_城市分配表 %>%
+    select(名称,天赋) %>% 
+    mutate(city = str_extract(天赋,i)) %>% 
     filter(!is.na(city)) %>% 
-    rbind(df_user_info_temp,.)
+    rbind(df_user_info_temp_1,.)
 }
-df_user_info_temp
+
+df_user_info_temp_1
+
+df_城市分配表 %>% 
+  filter(名称 == "麦小满")
+
 ```
+
+
+
+
+
+
+## 人物
+
 ```{r}
 df_user_info_temp <- data.frame()
 for (i in skills){
@@ -103,8 +151,25 @@ df_user_property %>%
 
 
 
-```{r}
-# df_城市分配表 <- read_excel("data/城市分配表.xlsx", 
-#     skip = 1)
-```
 
+
+
+
+
+
+
+
+
+## 人物关系
+
+```{r}
+# 
+# # create the network object
+# network <- graph_from_data_frame(d=df_user_network, directed=T) 
+# 
+# # plot it
+# plot(network, layout=layout.sphere, main="sphere")
+# plot(network, layout=layout.circle, main="circle")
+# plot(network, layout=layout.random, main="random")
+# plot(network, layout=layout.fruchterman.reingold, main="fruchterman.reingold")
+```
