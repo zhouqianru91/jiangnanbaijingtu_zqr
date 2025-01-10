@@ -18,15 +18,15 @@ library(readxl)
 
 
 ```{r, warning=FALSE, message=FALSE}
-# df_user_info <- read_csv("df_user_info.csv") %>% unique()
-# df_user_property <- read_csv("df_user_property.csv") %>% 
-#   unique() %>% 
-#   mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
-# df_user_network <- read_csv("df_user_network.csv") %>% unique()
-# 
-# df_zhenbao_info <- read_csv("df_zhenbao_info.csv") %>% unique()
-# df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique() 
-# df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv") %>% unique()
+df_user_info <- read_csv("df_user_info.csv") %>% unique()
+df_user_property <- read_csv("df_user_property.csv") %>%
+  unique() %>%
+  mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
+df_user_network <- read_csv("df_user_network.csv") %>% unique()
+
+df_zhenbao_info <- read_csv("df_zhenbao_info.csv") %>% unique()
+df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique()
+df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv") %>% unique()
 ```
 
 ```{r}
@@ -120,10 +120,8 @@ df_user_info_temp %>%
 ```
 
 ```{r}
-
 df_城市分配表 %>% 
-  select(`名称`,`城市分配`) %>% 
-  
+  select(`名称`,`城市分配`) 
 ```
 
 
@@ -131,7 +129,7 @@ df_城市分配表 %>%
 
 
 
-## 人物
+## 3.人物
 
 ```{r}
 df_user_info_temp <- data.frame()
@@ -143,15 +141,23 @@ for (i in skills){
     filter(!is.na(skill)) %>% 
     rbind(df_user_info_temp,.)
 }
-df_user_info_temp
+df_user_info_temp %>% 
+  mutate()
+```
+
+```{r}
+df_user_property
 ```
 
 
-
 ```{r}
-df_user_property %>% 
+df_user_property_temp <- df_user_property %>% 
   select(firstHeading,property_type,property_degree) %>% 
-  spread(property_type,property_degree)
+  spread(property_type,property_degree) %>% 
+  select(-'<NA>') %>% 
+  left_join(df_user_info_temp) 
+
+df_user_property_temp
 ```
 
 
@@ -166,14 +172,7 @@ df_user_property %>%
 
 
 
-
-
-
-
-
-
-
-## 人物关系
+## 4.人物关系
 
 ```{r}
 # 
