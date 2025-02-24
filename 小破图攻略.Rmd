@@ -14,112 +14,44 @@ library(readxl)
 ```
 
 
-## 1. 导入数据
+## 0. 导入数据
 
 
 ```{r, warning=FALSE, message=FALSE}
+## 用户信息
 df_user_info <- read_csv("df_user_info.csv") %>% unique()
+df_user_info
+```
+
+```{r 人物属性, warning=FALSE, message=FALSE}
+## 人物属性
 df_user_property <- read_csv("df_user_property.csv") %>%
   unique() %>%
   mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
-df_user_network <- read_csv("df_user_network.csv") %>% unique()
+df_user_property
+```
 
+```{r, warning=FALSE, message=FALSE}
+## 用户关系网
+df_user_network <- read_csv("df_user_network.csv") %>% unique()
+df_user_network
+```
+
+
+```{r, warning=FALSE, message=FALSE}
 df_zhenbao_info <- read_csv("df_zhenbao_info.csv") %>% unique()
 df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique()
 df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv") %>% unique()
-```
-
-```{r}
-df_user_info
-df_user_property
-df_user_network
 
 df_zhenbao_info
 df_zhenbao_property
 df_zhenbao_tianfu
+```
 
+```{r}
 df_城市分配表 <- read_excel("data/城市分配表.xlsx",
     skip = 1)
-```
 
-
-
-
-
-
-
-
-
-
-## 2.城市分配
-
-```{r}
-cities <- c('应天',"苏州","杭州","松江","徽州","绍兴","宁波")
-city_feature <- c("漕运")
-skills <- c('农牧',"制作","建造","探险","理财")
-factory_list <- c("香粉厂","锯木厂","徽商","商业建筑","商船","织布坊","标布作坊","步天观星","印刷厂")
-
-df_city_feature <- data.frame(
-  cities,
-  city_feature = c("","","","","","","漕运")
-)
-```
-
-
-### 2.1 天赋城市
-
-
-```{r}
-df_user_info_temp <- data.frame()
-
-for(user in df_user_info$firstHeading){
-
-  tianfu_4star <- df_user_info[df_user_info$firstHeading == user,]$tianfu_4star
-  for (i in cities){
-    city = str_extract(tianfu_4star,i)
-    df_user_info_temp <- rbind(df_user_info_temp,
-                               data.frame(firstHeading = user,
-                                          key = 'city',
-                                          value = city)
-                               )
-  }
-  for (j in city_feature){
-    city_feature = str_extract(tianfu_4star,j)
-    df_user_info_temp <- rbind(df_user_info_temp,
-                               data.frame(firstHeading = user,
-                                          key = 'city_feature',
-                                          value = city_feature)
-                               )
-  }
-  for (k in skills){
-    skill = str_extract(tianfu_4star,k)
-    df_user_info_temp <- rbind(df_user_info_temp,
-                                 data.frame(firstHeading = user,
-                                            key = 'skill',
-                                            value = skill)
-                               )
-  }
-  for (f in factory_list){
-    print(f)
-    fac = str_extract(tianfu_4star,f)
-    df_user_info_temp <- rbind(df_user_info_temp,
-                                 data.frame(firstHeading = user,
-                                            key = 'factory',
-                                            value = fac)
-                               )
-  }
-}
-
-df_user_info_temp <- df_user_info_temp %>%
-  drop_na() %>%
-  unique()
-
-df_user_info_temp %>% 
-  filter(firstHeading == '百里沉香')
-
-```
-
-```{r}
 df_城市分配表 %>% 
   select(`名称`,`城市分配`) 
 ```
@@ -127,47 +59,123 @@ df_城市分配表 %>%
 
 
 
+## 1.城市属性
+
+```{r}
+cities <- c('应天',"苏州","杭州","松江","扬州", "徽州","绍兴","宁波","鸡鸣山")
+factory_list <- c("锯木厂","商业建筑","织布坊","印刷厂")
+skills <- c('农牧',"制作","建造","探险","理财")
+
+df_city_feature <- data.frame(city = c(),key = c(), value = c())
+df_city_feature <- rbind(df_city_feature,
+                         
+                         data.frame(city = "杭州", key = "city_feature", value = "商栈"),
+                         data.frame(city = "松江", key = "city_feature", value = "煮盐"),
+                         data.frame(city = "扬州", key = "city_feature", value = "漕运"),
+                         data.frame(city = "徽州", key = "city_feature", value = "徽商"),
+                         
+                         data.frame(city = "扬州", key = "factory", value = "香粉厂"),
+                         data.frame(city = "扬州", key = "factory", value = "印刷厂"),
+                         data.frame(city = "松江", key = "factory", value = "煮盐场"),
+                         data.frame(city = "松江", key = "factory", value = "标布作坊"),
+                         data.frame(city = "宁波", key = "factory", value = "商船"),
+                         data.frame(city = "鸡鸣山", key = "factory", value = "步天观星")
+                         )
+```
 
 
 ## 3.人物
 
+### 3.1 用户特长
+
 ```{r}
-df_user_info_temp <- data.frame()
-for (i in skills){
-  print(i)
-  df_user_info_temp <- df_user_info %>%
-    select(firstHeading,tianfu_4star) %>% 
-    mutate(skill = str_extract(tianfu_4star,i)) %>% 
-    filter(!is.na(skill)) %>% 
-    rbind(df_user_info_temp,.)
+df_user_info_exp <- data.frame()
+
+for(user in df_user_info$firstHeading){
+  tianfu_4star <- df_user_info[df_user_info$firstHeading == user,]$tianfu_4star
+  ## 城市
+  for (i in cities){
+    city = str_extract(tianfu_4star,i)
+    df_user_info_exp <- rbind(df_user_info_exp,
+                               data.frame(firstHeading = user,
+                                          key = 'city',
+                                          value = city)
+                               )
+  }
+  ## 城市特别属性
+  city_feature_list <- df_city_feature %>% filter(key == 'city_feature') %>% .$value %>% unique()
+  for (j in city_feature_list){
+    city_feature = str_extract(tianfu_4star,j)
+    df_user_info_exp <- rbind(df_user_info_exp,
+                               data.frame(firstHeading = user,
+                                          key = 'city_feature',
+                                          value = city_feature)
+                               )
+  }
+  ## 技能
+  for (k in skills){
+    skill = str_extract(tianfu_4star,k)
+    df_user_info_exp <- rbind(df_user_info_exp,
+                                 data.frame(firstHeading = user,
+                                            key = 'skill',
+                                            value = skill)
+                               )
+  }
+  ## 工厂
+  factory_list <- unique(c(factory_list, df_city_feature %>% filter(key == 'factory') %>% .$value %>% unique()) )
+  for (f in factory_list){
+    # print(f)
+    fac = str_extract(tianfu_4star,f)
+    df_user_info_exp <- rbind(df_user_info_exp,
+                                 data.frame(firstHeading = user,
+                                            key = 'factory',
+                                            value = fac)
+                               )
+  }
 }
-df_user_info_temp %>% 
-  mutate()
-```
 
-```{r}
-df_user_property
-```
+df_user_info_exp <- df_user_info_exp %>%
+  drop_na() %>%
+  unique()
 
-
-```{r}
-df_user_property_temp <- df_user_property %>% 
-  select(firstHeading,property_type,property_degree) %>% 
-  spread(property_type,property_degree) %>% 
-  select(-'<NA>') %>% 
-  left_join(df_user_info_temp) 
-
-df_user_property_temp
+df_user_info_exp
 ```
 
 
+### 3.2 城市分配
 ```{r}
-df_user_property %>% 
+## 天赋城市
+df_city_user <- df_user_info_exp %>% 
+  left_join(df_city_feature) %>% 
+  filter(!is.na(city)) %>% 
+  select(-value) 
+
+df_city_user %>% 
+  filter(key == 'city') %>% 
+  select()
+  full_join(df_city_user %>% 
+    filter(key == 'city_feature') ) %>% 
+  full_join(df_city_user %>% 
+    filter(key == 'factory') )
+```
+
+
+
+### 3.2 人物属性值
+```{r}
+## 人物属性值
+df_user_property_value <- df_user_property %>% 
   select(firstHeading,property_type,property_value_f) %>% 
   spread(property_type,property_value_f)
+df_user_property_value
 ```
 
 
+
+
+```{r}
+
+```
 
 
 
