@@ -81,6 +81,14 @@ df_city_feature <- rbind(df_city_feature,
                          data.frame(city = "宁波", key = "factory", value = "商船"),
                          data.frame(city = "鸡鸣山", key = "factory", value = "步天观星")
                          )
+
+## 属性对应城市
+df_city_property <- data.frame(city = c(),property_type_1st = c(), property_type_2nd = c())
+df_city_property <- rbind(df_city_property,
+                          data.frame(city = c("应天"),property_type_1st = c("农牧"), property_type_2nd = c("制作"))
+  
+)
+df_city_property
 ```
 
 
@@ -112,15 +120,6 @@ for(user in df_user_info$firstHeading){
                                           value = city_feature)
                                )
   }
-  ## 技能
-  for (k in skills){
-    skill = str_extract(tianfu_4star,k)
-    df_user_info_exp <- rbind(df_user_info_exp,
-                                 data.frame(firstHeading = user,
-                                            key = 'skill',
-                                            value = skill)
-                               )
-  }
   ## 工厂
   factory_list <- unique(c(factory_list, df_city_feature %>% filter(key == 'factory') %>% .$value %>% unique()) )
   for (f in factory_list){
@@ -130,6 +129,15 @@ for(user in df_user_info$firstHeading){
                                  data.frame(firstHeading = user,
                                             key = 'factory',
                                             value = fac)
+                               )
+  }
+  ## 技能
+  for (k in skills){
+    skill = str_extract(tianfu_4star,k)
+    df_user_info_exp <- rbind(df_user_info_exp,
+                                 data.frame(firstHeading = user,
+                                            key = 'skill',
+                                            value = skill)
                                )
   }
 }
@@ -142,39 +150,88 @@ df_user_info_exp
 ```
 
 
-### 3.2 城市分配
-```{r}
-## 天赋城市
-df_city_user <- df_user_info_exp %>% 
-  left_join(df_city_feature) %>% 
-  filter(!is.na(city)) %>% 
-  select(-value) 
 
-df_city_user %>% 
-  filter(key == 'city') %>% 
-  select()
-  full_join(df_city_user %>% 
-    filter(key == 'city_feature') ) %>% 
-  full_join(df_city_user %>% 
-    filter(key == 'factory') )
-```
 
 
 
 ### 3.2 人物属性值
 ```{r}
+## 人物属性
+df_user_property_char <- df_user_property %>% 
+  select(firstHeading,property_type,property_degree) %>% 
+  spread(property_type,property_degree)
+df_user_property_char
+
 ## 人物属性值
 df_user_property_value <- df_user_property %>% 
   select(firstHeading,property_type,property_value_f) %>% 
   spread(property_type,property_value_f)
 df_user_property_value
+
+## 前2个属性
+df_user_property_top2 <- df_user_property %>% 
+  group_by(firstHeading) %>% 
+  mutate(rn = row_number(desc(property_value_f))) %>% 
+  filter(rn <=2)  
+
+## 前2个属性_spread
+df_user_property_top2_spread <- df_user_property_top2 %>% 
+  select(firstHeading,property_type,property_value_f) %>% 
+  spread(property_type,property_value_f)
+df_user_property_top2_spread
+
+df_user_property_top2 <- df_user_property_top2 %>% 
+  select(firstHeading,property_type,rn) %>% 
+  filter(rn == 1) %>% 
+  mutate(property_type_1st = property_type) %>% 
+  left_join(df_user_property_top2 %>% 
+              select(firstHeading,property_type,rn) %>% 
+              filter(rn == 2) %>% 
+              mutate(property_type_2nd = property_type) ,by = "firstHeading")  %>% 
+  select(firstHeading,property_type_1st,property_type_2nd) %>% 
+  left_join(df_user_property_top2_spread)
+df_user_property_top2
+
 ```
 
 
+### 3.3 城市分配
+
+```{r}
+## 城市，城市属性，工厂
+df_city_user <- df_user_info_exp %>% 
+  left_join(df_city_feature) %>% 
+  filter(!is.na(city)) %>% 
+  select(-value) 
+
+df_city_user_spread <- 
+  ## 城市
+  df_user_info_exp %>% 
+  filter(key == 'city') %>% 
+  mutate(city = value) %>% 
+  select(firstHeading,city) %>% 
+  ## 城市特殊属性
+  full_join(df_city_user %>% 
+              filter(key == 'city_feature') %>% 
+              mutate(city_feature_city = city) %>% 
+              select(firstHeading,city_feature_city)) %>% 
+   ## factory
+  full_join(df_city_user %>% 
+              filter(key == 'factory') %>% 
+              mutate(factory_city = city) %>% 
+              select(firstHeading,factory_city))
+
+df_city_user_spread
+```
 
 
 ```{r}
-
+df_user_info %>% 
+  select(firstHeading,tianfu_4star) %>% 
+  ## 用户前2名属性
+  # left_join(df_user_property_top2_spread) %>% 
+  left_join(df_user_property_top2) %>% 
+  left_join(df_city_user_spread) 
 ```
 
 
