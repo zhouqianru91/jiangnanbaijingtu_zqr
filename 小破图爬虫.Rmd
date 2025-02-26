@@ -483,7 +483,8 @@ for (i in 1:nrow(df)) {
   
     ## 专珍归属人物
     property_user <- property_list[!property_list == '']
-    user_name <- str_trim(property_user[length(property_user)] %>% str_split('.png') %>% .[[1]] %>% .[2])
+    # user_name <- str_trim(property_user[length(property_user)] %>% str_split('.png') %>% .[[1]] %>% .[2])
+    user_name <- property_user[length(property_user)] %>% str_trim()
     zhenbao_info$user_name <- user_name
     
     ## 天赋 + 简介
