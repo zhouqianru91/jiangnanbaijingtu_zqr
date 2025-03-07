@@ -323,9 +323,11 @@ df_zhenbao_user_result_property_rn <- df_user_property_top2 %>%
   mutate(rn = row_number(desc(property_value_1st))) 
 
 df_zhenbao_user_result_property <- df_zhenbao_user_result_property_rn %>% 
+  # filter(firstHeading == user_current) %>%
   filter(own_tag == 1) %>% 
-  arrange(firstHeading,rn) %>% 
-  top_n(1)
+  mutate(rnn = row_number(rn)) %>% 
+  filter(rnn == 1) %>% 
+  select(-rnn)
 
 df_zhenbao_user_result_property
 ```
@@ -376,6 +378,10 @@ user_current = '百里沉香'
 df_zhenbao_user_result %>% 
   select(firstHeading,user_tag,zhenbao_zhuanshu,zhenbao,cat,own_tag,rn,current_zhenbao) %>% 
   filter(firstHeading == user_current)
+
+df_zhenbao_user_result_property_rn %>% 
+  filter(firstHeading == user_current) %>% 
+  arrange(.,rn)
 ```
 
 ```{r}
@@ -388,5 +394,8 @@ zhenbao_current_v <- owned_user_zhenbao_pair$zhenbao[owned_user_zhenbao_pair$use
 df_zhenbao_property_top2 %>% 
   # filter(zhenbao == zhenbao_current)
   filter(zhenbao %in% c(zhenbao_v,zhenbao_current_v))
+```
+```{r}
+df_zhenbao_info %>% filter(firstHeading == zhenbao_v)
 ```
 
