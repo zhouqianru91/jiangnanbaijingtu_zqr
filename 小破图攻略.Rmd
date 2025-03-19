@@ -20,35 +20,64 @@ library(readxl)
 
 ```{r, warning=FALSE, message=FALSE}
 ## 用户信息
-df_user_info <- read_csv("df_user_info.csv") %>% unique()
+df_user_info <- read_csv("df_user_info.csv") %>% unique() 
+colnames(df_user_info)[1] <- "user"
 df_user_info
 
 ## 人物属性
 df_user_property <- read_csv("df_user_property.csv") %>%
   unique() %>%
   mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
+colnames(df_user_property)[1] <- "user"
 df_user_property
 
 ## 用户关系网
 df_user_network <- read_csv("df_user_network.csv") %>% unique()
+colnames(df_user_network)[1] <- "user"
 df_user_network
 ```
 ## 珍宝数据
 
 ```{r, warning=FALSE, message=FALSE}
 df_zhenbao_info <- read_csv("df_zhenbao_info.csv") %>% unique()
-df_zhenbao_info$firstHeading[df_zhenbao_info$firstHeading == '啸天犬'] <- '哮天犬'
+colnames(df_zhenbao_info)[colnames(df_zhenbao_info)=="firstHeading"] <- "zhenbao"
+colnames(df_zhenbao_info)[colnames(df_zhenbao_info)=="user_name"] <- "user"
+df_zhenbao_info$zhenbao[df_zhenbao_info$zhenbao == '啸天犬'] <- '哮天犬'
 
-df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique()
-df_zhenbao_property$firstHeading[df_zhenbao_property$firstHeading == '啸天犬'] <- '哮天犬'
+df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique() %>% select(-V2,-V4)
+colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="firstHeading"] <- "zhenbao"
+colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="V1"] <- "property"
+colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="V3"] <- "value_i"
+colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="V5"] <- "value_f"
+df_zhenbao_property$zhenbao[df_zhenbao_property$zhenbao == '啸天犬'] <- '哮天犬'
 
 df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv") %>% unique()
-df_zhenbao_tianfu$zhenbao_name[df_zhenbao_tianfu$zhenbao_name == '啸天犬'] <- '哮天犬'
+colnames(df_zhenbao_tianfu)[colnames(df_zhenbao_tianfu)=="zhenbao_name"] <- "zhenbao"
+df_zhenbao_tianfu$zhenbao[df_zhenbao_tianfu$zhenbao == '啸天犬'] <- '哮天犬'
 
 df_zhenbao_info
 df_zhenbao_property
 df_zhenbao_tianfu
 ```
+## 已拥有人物
+
+```{r}
+owned_user_list <- c("白居易", "百里安","百里沉香","白素贞","包拯","程大位", "常遇春","东方祚","道济","端木偃", "范泊宁","冯令吉","天机子","公孙策", "宫商羽","黄道婆","红鸾","云踏雪", "胡月眉","李白","刘伯温","卢璀", "卢璨","令风来","罗贯中","李清照", "罗素月","李时珍","柳笑翁","兰心娴", "鹿溪隐","孟好学","马蓬瀛","麦小满", "马远道","孟余","戚继光","乔沐", "屈原", "秦挽铮", "秦奚", "仇英", "仇珠", "沈度", "沈括", "施耐庵", "苏轼", "奢香", "沈周", "唐伯虎", "谈允贤", "王祯", "文俶", "吴承恩", "王扶危", "王昭君", "武则天", "薛涛", "向斜阳", "玄奘", "徐祯卿", "鱼玄机","杨宗保","张山归","祝英台","展昭","张择端" )
+df_owned_user <- data.frame(user = owned_user_list)
+
+df_user_info$user[df_user_info$user_cat == "天级角色"][!is.element(df_user_info$user[df_user_info$user_cat == "天级角色"],owned_user_list)]
+```
+
+## 已拥有珍宝
+
+```{r}
+owned_zhenbao_list <- c("风火轮","天书","破伞","金缠腰","曲项琵琶","龙鳞装书籍","红鸾铜镜","波若经","李花枝","汉宫春晓图","清明上河图","银凰灸针","广陵散","琉璃瓶","冰玉棋盘","玉净瓶","木雕小猫","凤阳花鼓","油彩盒","卧儿兔","八景宫灯","龙年鞭炮","酉酒笔","紫铜手炉","蛇玲珑","风火轮","太极图","哮天犬","缚龙索","打神鞭")
+df_owned_zhenbao <- data.frame(zhenbao = unique(owned_zhenbao_list))
+
+df_zhenbao_info$zhenbao[df_zhenbao_info$cat == "专属珍宝"][!is.element(df_zhenbao_info$zhenbao[df_zhenbao_info$cat == "专属珍宝"],owned_zhenbao_list)]
+```
+
+
 
 ```{r}
 df_城市分配表 <- read_excel("data/城市分配表.xlsx",
@@ -101,13 +130,13 @@ df_city_property
 ```{r}
 df_user_info_exp <- data.frame()
 
-for(user in df_user_info$firstHeading){
-  tianfu_4star <- df_user_info[df_user_info$firstHeading == user,]$tianfu_4star
+for(user in df_user_info$user){
+  tianfu_4star <- df_user_info[df_user_info$user == user,]$tianfu_4star
   ## 城市
   for (i in cities){
     city = str_extract(tianfu_4star,i)
     df_user_info_exp <- rbind(df_user_info_exp,
-                               data.frame(firstHeading = user,
+                               data.frame(user = user,
                                           key = 'city',
                                           value = city)
                                )
@@ -117,7 +146,7 @@ for(user in df_user_info$firstHeading){
   for (j in city_feature_list){
     city_feature = str_extract(tianfu_4star,j)
     df_user_info_exp <- rbind(df_user_info_exp,
-                               data.frame(firstHeading = user,
+                               data.frame(user = user,
                                           key = 'city_feature',
                                           value = city_feature)
                                )
@@ -128,7 +157,7 @@ for(user in df_user_info$firstHeading){
     # print(f)
     fac = str_extract(tianfu_4star,f)
     df_user_info_exp <- rbind(df_user_info_exp,
-                                 data.frame(firstHeading = user,
+                                 data.frame(user = user,
                                             key = 'factory',
                                             value = fac)
                                )
@@ -137,7 +166,7 @@ for(user in df_user_info$firstHeading){
   for (k in skills){
     skill = str_extract(tianfu_4star,k)
     df_user_info_exp <- rbind(df_user_info_exp,
-                                 data.frame(firstHeading = user,
+                                 data.frame(user = user,
                                             key = 'skill',
                                             value = skill)
                                )
@@ -160,38 +189,39 @@ df_user_info_exp
 ```{r}
 ## 人物属性
 df_user_property_char <- df_user_property %>% 
-  select(firstHeading,property_type,property_degree) %>% 
+  select(user,property_type,property_degree) %>% 
   spread(property_type,property_degree)
 df_user_property_char
 
 ## 人物属性值
 df_user_property_value <- df_user_property %>% 
-  select(firstHeading,property_type,property_value_f) %>% 
+  select(user,property_type,property_value_f) %>% 
   spread(property_type,property_value_f)
 df_user_property_value
 
 ## 前2个属性
 df_user_property_top2 <- df_user_property %>% 
-  group_by(firstHeading) %>% 
+  group_by(user) %>% 
   mutate(rn = row_number(desc(property_value_f))) %>% 
   filter(rn <=2)  
 
 ## 前2个属性_spread
 df_user_property_top2_spread <- df_user_property_top2 %>% 
-  select(firstHeading,property_type,property_value_f) %>% 
+  select(user,property_type,property_value_f) %>% 
   spread(property_type,property_value_f)
 df_user_property_top2_spread
 
 df_user_property_top2 <- df_user_property_top2 %>% 
-  select(firstHeading,property_type,rn) %>% 
+  select(user,property_type,rn) %>% 
   filter(rn == 1) %>% 
-  mutate(property_type_1st = property_type) %>% 
+  mutate(u_p_1st = property_type) %>% 
   left_join(df_user_property_top2 %>% 
-              select(firstHeading,property_type,rn) %>% 
+              select(user,property_type,rn) %>% 
               filter(rn == 2) %>% 
-              mutate(property_type_2nd = property_type) ,by = "firstHeading")  %>% 
-  select(firstHeading,property_type_1st,property_type_2nd) %>% 
+              mutate(u_p_2nd = property_type) ,by = "user")  %>% 
+  select(user,u_p_1st,u_p_2nd) %>% 
   left_join(df_user_property_top2_spread)
+
 df_user_property_top2
 
 ```
@@ -211,17 +241,17 @@ df_city_user_spread <-
   df_user_info_exp %>% 
   filter(key == 'city') %>% 
   mutate(city = value) %>% 
-  select(firstHeading,city) %>% 
+  select(user,city) %>% 
   ## 城市特殊属性
   full_join(df_city_user %>% 
               filter(key == 'city_feature') %>% 
               mutate(city_feature_city = city) %>% 
-              select(firstHeading,city_feature_city)) %>% 
+              select(user,city_feature_city)) %>% 
    ## factory
   full_join(df_city_user %>% 
               filter(key == 'factory') %>% 
               mutate(factory_city = city) %>% 
-              select(firstHeading,factory_city))
+              select(user,factory_city))
 
 df_city_user_spread
 ```
@@ -229,7 +259,7 @@ df_city_user_spread
 
 ```{r}
 df_user_info %>% 
-  select(firstHeading,tianfu_4star) %>% 
+  select(user,tianfu_4star) %>% 
   ## 用户前2名属性
   # left_join(df_user_property_top2_spread) %>% 
   left_join(df_user_property_top2) %>% 
@@ -257,84 +287,6 @@ df_user_info %>%
 
 # 5.珍宝人物匹配
 
-
-
-```{r}
-owned_user_list <- c("白居易", "百里安","百里沉香","白素贞","包拯","程大位", "常遇春","东方祚","道济","端木偃", "范泊宁","冯令吉","天机子","公孙策", "宫商羽","黄道婆","红鸾","云踏雪", "胡月眉","李白","刘伯温","卢璀", "卢璨","令风来","罗贯中","李清照", "罗素月","李时珍","柳笑翁","兰心娴", "鹿溪隐","孟好学","马蓬瀛","麦小满", "马远道","孟余","戚继光","乔沐", "屈原", "秦挽铮", "秦奚", "仇英", "仇珠", "沈度", "沈括", "施耐庵", "苏轼", "奢香", "沈周", "唐伯虎", "谈允贤", "王祯", "文俶", "吴承恩", "王扶危", "王昭君", "武则天", "薛涛", "向斜阳", "玄奘", "徐祯卿", "鱼玄机","杨宗保","张山归","祝英台","展昭","张择端" )
-df_owned_user <- data.frame(user = owned_user_list)
-
-df_user_info$firstHeading[df_user_info$user_cat == "天级角色"][!is.element(df_user_info$firstHeading[df_user_info$user_cat == "天级角色"],owned_user_list)]
-```
-
-```{r}
-owned_zhenbao_list <- c("风火轮","天书","破伞","金缠腰","曲项琵琶","龙鳞装书籍","红鸾铜镜","波若经","李花枝","汉宫春晓图","清明上河图","银凰灸针","广陵散","琉璃瓶","冰玉棋盘","玉净瓶","木雕小猫","凤阳花鼓","油彩盒","卧儿兔","八景宫灯","龙年鞭炮","酉酒笔","紫铜手炉","蛇玲珑","风火轮","太极图","哮天犬","缚龙索","打神鞭")
-df_owned_zhenbao <- data.frame(zhenbao = unique(owned_zhenbao_list))
-
-df_zhenbao_info$firstHeading[df_zhenbao_info$cat == "专属珍宝"][!is.element(df_zhenbao_info$firstHeading[df_zhenbao_info$cat == "专属珍宝"],owned_zhenbao_list)]
-```
-
-
-
-
-
-## 5.1 专属珍宝
-
-
-```{r}
-df_zhenbao_info 
-```
-
-
-## 5.2 属性匹配
-
-## 5.2.1 珍宝的top2属性
-
-```{r}
-## 珍宝的top2属性
-df_zhenbao_property_top2 <- df_zhenbao_property %>% 
-  left_join(df_zhenbao_info %>% select(firstHeading,cat),by = c("firstHeading")) %>% 
-  group_by(firstHeading) %>% 
-  mutate(rn = row_number(desc(V5))) %>% 
-  filter(rn <=2) %>% 
-  select(firstHeading,V1,V5,rn,cat) %>% 
-  ungroup()
-
-df_zhenbao_property_top2 <- df_zhenbao_property_top2 %>% 
-  filter(rn == 1) %>% 
-  mutate(property_type_1st = `V1`,property_value_1st = `V5`) %>% 
-  select(-V1) %>% 
-  left_join(df_zhenbao_property_top2 %>% 
-              filter(rn == 2) %>% 
-              mutate(property_type_2nd = `V1`,property_value_2nd = `V5`) %>% 
-              select(-V1,-cat),by = c("firstHeading")) %>% 
-  mutate(zhenbao = firstHeading) %>% 
-  select(zhenbao,cat,property_type_1st,property_value_1st,property_type_2nd,property_value_2nd) 
-
-df_zhenbao_property_top2 <- df_zhenbao_property_top2 %>% 
-  left_join(df_owned_zhenbao %>% mutate(own_tag = 1))
-```
-## 5.2.2 用户和属性匹配
-```{r}
-## 所有珍宝 2个属性都匹配
-df_zhenbao_user_result_property_rn <- df_user_property_top2 %>%
-  select(firstHeading,property_type_1st,property_type_2nd) %>% 
-  left_join(df_zhenbao_property_top2, by = c("property_type_1st" = "property_type_1st", "property_type_2nd" = "property_type_2nd" )) %>% 
-  group_by(firstHeading) %>% 
-  mutate(rn = row_number(desc(property_value_1st))) 
-
-df_zhenbao_user_result_property <- df_zhenbao_user_result_property_rn %>% 
-  # filter(firstHeading == user_current) %>%
-  filter(own_tag == 1) %>% 
-  mutate(rnn = row_number(rn)) %>% 
-  filter(rnn == 1) %>% 
-  select(-rnn)
-
-df_zhenbao_user_result_property
-```
-
-
-## 5.3 匹配
-
 ```{r}
 ## 现在用的珍宝
 owned_user_zhenbao_pair <- data.frame(zhenbao = c(),user = c())
@@ -357,45 +309,111 @@ owned_user_zhenbao_pair <- rbind(
 )	
 ```
 
+## 5.0 目前珍宝
+
 ```{r}
-## 最佳珍宝
 df_zhenbao_user_result <- df_user_info %>% 
-  left_join(df_owned_user %>% mutate(user_tag = 1), by = c("firstHeading" = "user")) %>% 
-  select(firstHeading,user_cat,user_tag) %>% 
+  ## 判断是否已拥有用户
+  left_join(df_owned_user %>% mutate(own_tag = 1), by = c("user" = "user")) %>% 
+  ## 先只看已有用户
+  filter(own_tag == 1) %>% 
+  select(user,user_cat) %>% 
+  ## 现在用的 
+  left_join(owned_user_zhenbao_pair %>% mutate(cur_zb = zhenbao) %>% select(-zhenbao), by = c("user" = "user")) 
+
+df_zhenbao_user_result
+```
+
+
+## 5.1 专属珍宝
+```{r}
+df_zhenbao_user_result <- df_zhenbao_user_result %>%  #,own_tag
   ## 专属珍宝
   left_join(df_zhenbao_info %>% 
               filter(cat == '专属珍宝') %>% 
-              mutate(zhenbao_zhuanshu = firstHeading) %>% 
-              select(-firstHeading,-zhenbao_desc,-cat), by = c("firstHeading" = "user_name")) %>% 
-  ## 目前已有最佳选择
-  left_join(df_zhenbao_user_result_property) %>% 
-  ## 现在用的 
-  left_join(owned_user_zhenbao_pair %>% mutate(current_zhenbao = zhenbao) %>% select(-zhenbao), by = c("firstHeading" = "user")) 
+              mutate(sp_zb = zhenbao) %>% 
+              select(-zhenbao,-zhenbao_desc,-cat), by = c("user" = "user"))
+
+## 判断专属珍宝是否已有
+df_zhenbao_user_result <- df_zhenbao_user_result %>% 
+  left_join(df_owned_zhenbao %>% mutate(sp_zb_tag = 1), by = c("sp_zb" = "zhenbao"))
+
+## 目前最好方案
+df_zhenbao_user_result <- df_zhenbao_user_result %>% 
+  mutate(cur_best = ifelse(sp_zb_tag == 1, sp_zb,cur_zb))
 ```
 
+
+## 5.2 属性匹配
+
+### 5.2.1 珍宝的top2属性
+
 ```{r}
-user_current = '百里沉香'
-df_zhenbao_user_result %>% 
-  select(firstHeading,user_tag,zhenbao_zhuanshu,zhenbao,cat,own_tag,rn,current_zhenbao) %>% 
-  filter(firstHeading == user_current)
+## 珍宝的top2属性排序 & 筛选
+df_zhenbao_property_top2 <- df_zhenbao_property %>% 
+  left_join(df_zhenbao_info %>% select(zhenbao,cat),by = c("zhenbao")) %>% 
+  group_by(zhenbao) %>% 
+  mutate(rn = row_number(desc(value_f))) %>% 
+  filter(rn <= 2) %>% 
+  select(zhenbao,property,value_f,rn,cat) %>% 
+  ungroup()
+
+## 更改列名
+df_zhenbao_property_top2 <- df_zhenbao_property_top2 %>% 
+  filter(rn == 1) %>% 
+  mutate(zb_p_1st = `property`,zb_v_1st = `value_f`) %>% 
+  select(-property) %>% 
+  left_join(df_zhenbao_property_top2 %>% 
+              filter(rn == 2) %>% 
+              mutate(zb_p_2nd = `property`,zb_v_2nd = `value_f`) %>% 
+              select(-property,-cat),by = c("zhenbao")) %>% 
+  mutate(zhenbao = zhenbao) %>% 
+  select(zhenbao,cat,zb_p_1st,zb_v_1st,zb_p_2nd,zb_v_2nd) 
+
+## 判断是否已拥有珍宝
+df_zhenbao_property_top2 <- df_zhenbao_property_top2 %>% 
+  left_join(df_owned_zhenbao %>% mutate(own_tag = 1))
+
+df_zhenbao_property_top2
+```
+### 5.2.2 用户和属性匹配
+```{r}
+## 用户 vs 所有珍宝 - 2个属性都匹配
+df_zhenbao_user_result_property_rn <- df_user_property_top2 %>%
+  select(user,u_p_1st,u_p_2nd) %>% 
+  left_join(df_zhenbao_property_top2 %>% filter(own_tag == 1), by = c("u_p_1st" = "zb_p_1st", "u_p_2nd" = "zb_p_2nd" )) %>% 
+  group_by(user) %>% 
+  mutate(rn = row_number(desc(zb_v_1st))) 
 
 df_zhenbao_user_result_property_rn %>% 
-  filter(firstHeading == user_current) %>% 
-  arrange(.,rn)
+  filter(user == "汤姑")
+
+df_zhenbao_user_result_property <- df_zhenbao_user_result_property_rn 
+
+df_zhenbao_user_result_property %>% 
+  filter(user == "汤姑")
 ```
 
+
+### 5.2.3 匹配
+
+
+
 ```{r}
-df_user_property_top2 %>% 
-  filter(firstHeading == user_current)
+## 加上属性匹配珍宝比较
+df_zhenbao_user_result   %>% 
+  # filter(cur_zb == sp_zb)
+  ## 目前已有最佳选择
+  left_join(df_zhenbao_user_result_property %>% filter(rn == 1) %>% mutate(zb_1st = zhenbao)) %>% 
+  # mutate(cur_best = ifelse(coalesce(sp_zb_tag,0) == 1, sp_zb,ifelse(coalesce(own_tag,0) == 1, zhenbao,cur_zb))) %>% 
+  select(user,user_cat,u_p_1st,u_p_2nd,cur_zb,sp_zb,sp_zb_tag,zb_1st)  %>% 
+  
+  left_join(df_zhenbao_user_result_property %>% filter(rn == 2) %>% select(-u_p_1st,-u_p_2nd) %>% mutate(zb_2nd = zhenbao)) %>% 
+  select(user,user_cat,u_p_1st,u_p_2nd,cur_zb,sp_zb,sp_zb_tag,zb_1st,zb_2nd) 
+
+
+
 ```
-```{r}
-zhenbao_v <- df_zhenbao_user_result$zhenbao[df_zhenbao_user_result$firstHeading == user_current]
-zhenbao_current_v <- owned_user_zhenbao_pair$zhenbao[owned_user_zhenbao_pair$user == user_current]
-df_zhenbao_property_top2 %>% 
-  # filter(zhenbao == zhenbao_current)
-  filter(zhenbao %in% c(zhenbao_v,zhenbao_current_v))
-```
-```{r}
-df_zhenbao_info %>% filter(firstHeading == zhenbao_v)
-```
+
+
 
