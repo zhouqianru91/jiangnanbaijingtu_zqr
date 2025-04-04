@@ -29,7 +29,12 @@ df_user_property <- read_csv("df_user_property.csv") %>%
   unique() %>%
   mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
 colnames(df_user_property)[1] <- "user"
-df_user_property
+### 部分人物没有公式，手动调整
+df_user_property <- df_user_property %>% 
+  mutate(property_value_f = ifelse(user %in% c('薛涛','干将','柳永','李冶','莫邪'), property_value_f_total,property_value_f)) %>% 
+  mutate(property_value_f = as.integer(property_value_f))
+df_user_property %>% filter(is.na(property_value_f))
+df_user_property %>% filter(user == '薛涛')
 
 ## 用户关系网
 df_user_network <- read_csv("df_user_network.csv") %>% unique()
@@ -44,12 +49,13 @@ colnames(df_zhenbao_info)[colnames(df_zhenbao_info)=="firstHeading"] <- "zhenbao
 colnames(df_zhenbao_info)[colnames(df_zhenbao_info)=="user_name"] <- "user"
 df_zhenbao_info$zhenbao[df_zhenbao_info$zhenbao == '啸天犬'] <- '哮天犬'
 
-df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique() %>% select(-V2,-V4)
+df_zhenbao_property <- read_csv("df_zhenbao_property.csv") %>% unique() %>% select(-V2,-V4) 
 colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="firstHeading"] <- "zhenbao"
 colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="V1"] <- "property"
 colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="V3"] <- "value_i"
 colnames(df_zhenbao_property)[colnames(df_zhenbao_property)=="V5"] <- "value_f"
 df_zhenbao_property$zhenbao[df_zhenbao_property$zhenbao == '啸天犬'] <- '哮天犬'
+df_zhenbao_property <- df_zhenbao_property %>% select(zhenbao,property,value_i,value_f)
 
 df_zhenbao_tianfu <- read_csv("df_zhenbao_tianfu.csv") %>% unique()
 colnames(df_zhenbao_tianfu)[colnames(df_zhenbao_tianfu)=="zhenbao_name"] <- "zhenbao"
@@ -59,21 +65,42 @@ df_zhenbao_info
 df_zhenbao_property
 df_zhenbao_tianfu
 ```
+
+```{r}
+## spread
+df_zhenbao_property_spread <- df_zhenbao_property %>% 
+  select(zhenbao,property, value_f) %>% 
+  spread(property, value_f)
+
+df_zhenbao_all <- df_zhenbao_info %>% 
+  select(zhenbao,user) %>% 
+  left_join(df_zhenbao_property_spread) %>% 
+  left_join(df_zhenbao_tianfu %>% filter(zhenbao_lvl == 40))
+
+df_zhenbao_all %>% filter(zhenbao == '金缠腰')
+
+```
 ## 已拥有人物
 
 ```{r}
-owned_user_list <- c("白居易", "百里安","百里沉香","白素贞","包拯","程大位", "常遇春","东方祚","道济","端木偃", "范泊宁","冯令吉","天机子","公孙策", "宫商羽","黄道婆","红鸾","云踏雪", "胡月眉","李白","刘伯温","卢璀", "卢璨","令风来","罗贯中","李清照", "罗素月","李时珍","柳笑翁","兰心娴", "鹿溪隐","孟好学","马蓬瀛","麦小满", "马远道","孟余","戚继光","乔沐", "屈原", "秦挽铮", "秦奚", "仇英", "仇珠", "沈度", "沈括", "施耐庵", "苏轼", "奢香", "沈周", "唐伯虎", "谈允贤", "王祯", "文俶", "吴承恩", "王扶危", "王昭君", "武则天", "薛涛", "向斜阳", "玄奘", "徐祯卿", "鱼玄机","杨宗保","张山归","祝英台","展昭","张择端" )
-df_owned_user <- data.frame(user = owned_user_list)
+owned_user_list <- c("白居易", "百里安","百里沉香","白素贞","包拯","程大位", "常遇春","东方祚","道济","端木偃", "范泊宁","冯令吉","天机子","公孙策", "宫商羽","黄道婆","红鸾","云踏雪", "胡月眉","李白","刘伯温","卢璀", "卢璨","令风来","罗贯中","李清照", "罗素月","李时珍","柳笑翁","兰心娴", "鹿溪隐","孟好学","马蓬瀛","麦小满", "马远道","孟余","戚继光","乔沐", "屈原", "秦挽铮", "秦奚", "仇英", "仇珠", "沈度", "沈括", "施耐庵", "苏轼", "奢香", "沈周", "唐伯虎", "谈允贤", "王祯", "文俶", "吴承恩", "王扶危", "王昭君", "武则天", "薛涛", "向斜阳", "玄奘", "徐祯卿", "鱼玄机","杨宗保","张山归","祝英台","展昭","张择端",
+                     "阿朵")
+owned_user_list_num <- seq(1,length(owned_user_list),1)
+df_owned_user <- data.frame(user = owned_user_list,user_num = owned_user_list_num)
 
+#check
 df_user_info$user[df_user_info$user_cat == "天级角色"][!is.element(df_user_info$user[df_user_info$user_cat == "天级角色"],owned_user_list)]
+df_user_info$user[df_user_info$user_cat == "侯级角色"][!is.element(df_user_info$user[df_user_info$user_cat == "侯级角色"],owned_user_list)]
 ```
 
 ## 已拥有珍宝
 
 ```{r}
-owned_zhenbao_list <- c("风火轮","天书","破伞","金缠腰","曲项琵琶","龙鳞装书籍","红鸾铜镜","波若经","李花枝","汉宫春晓图","清明上河图","银凰灸针","广陵散","琉璃瓶","冰玉棋盘","玉净瓶","木雕小猫","凤阳花鼓","油彩盒","卧儿兔","八景宫灯","龙年鞭炮","酉酒笔","紫铜手炉","蛇玲珑","风火轮","太极图","哮天犬","缚龙索","打神鞭")
+owned_zhenbao_list <- c("风火轮","天书","破伞","金缠腰","曲项琵琶","龙鳞装书籍","红鸾铜镜","波若经","李花枝","汉宫春晓图","清明上河图","银凰灸针","广陵散","琉璃瓶","冰玉棋盘","玉净瓶","木雕小猫","凤阳花鼓","油彩盒","卧儿兔","八景宫灯","龙年鞭炮","酉酒笔","紫铜手炉","蛇玲珑",
+                        "风火轮","太极图","哮天犬","缚龙索","打神鞭")
 df_owned_zhenbao <- data.frame(zhenbao = unique(owned_zhenbao_list))
 
+#check
 df_zhenbao_info$zhenbao[df_zhenbao_info$cat == "专属珍宝"][!is.element(df_zhenbao_info$zhenbao[df_zhenbao_info$cat == "专属珍宝"],owned_zhenbao_list)]
 ```
 
@@ -188,19 +215,19 @@ df_user_info_exp
 ## 3.2 人物属性值
 ```{r}
 ## 人物属性
-df_user_property_char <- df_user_property %>% 
-  select(user,property_type,property_degree) %>% 
-  spread(property_type,property_degree)
-df_user_property_char
+# df_user_property_char <- df_user_property %>% 
+#   select(user,property_type,property_degree) %>% 
+#   spread(property_type,property_degree)
+# df_user_property_char
 
 ## 人物属性值
-df_user_property_value <- df_user_property %>% 
-  select(user,property_type,property_value_f) %>% 
-  spread(property_type,property_value_f)
-df_user_property_value
+# df_user_property_value <- df_user_property %>% 
+#   select(user,property_type,property_value_f) %>% 
+#   spread(property_type,property_value_f)
+# df_user_property_value
 
 ## 前2个属性
-df_user_property_top2 <- df_user_property %>% 
+df_user_property_top2 <- df_user_property %>% #filter(user == '施耐庵') %>% 
   group_by(user) %>% 
   mutate(rn = row_number(desc(property_value_f))) %>% 
   filter(rn <=2)  
@@ -222,7 +249,7 @@ df_user_property_top2 <- df_user_property_top2 %>%
   select(user,u_p_1st,u_p_2nd) %>% 
   left_join(df_user_property_top2_spread)
 
-df_user_property_top2
+df_user_property_top2 %>% filter(user == "乔沐")
 
 ```
 
@@ -288,25 +315,7 @@ df_user_info %>%
 # 5.珍宝人物匹配
 
 ```{r}
-## 现在用的珍宝
-owned_user_zhenbao_pair <- data.frame(zhenbao = c(),user = c())
-owned_user_zhenbao_pair <- rbind(
-  owned_user_zhenbao_pair,
-  data.frame(zhenbao = c("打神鞭"),user = c("白居易")),
-  data.frame(zhenbao = c("太极图"),user = c("百里安")),
-  data.frame(zhenbao = c("哮天犬"),user = c("百里沉香")),
-  data.frame(zhenbao = c("红鸾铜镜"),user = c("红鸾")),
-  data.frame(zhenbao = c("曲项琵琶"),user = c("卢璀")),
-  data.frame(zhenbao = c("汉宫春晓图"),user = c("仇英")),
-  data.frame(zhenbao = c("清明上河图"),user = c("张择端")),
-  data.frame(zhenbao = c("冰玉棋盘"),user = c("天机子")),	
-  data.frame(zhenbao = c("李花枝"),user = c("李白")),
-  data.frame(zhenbao = c("龙鳞装书籍"),user = c("卢璨")),	
-  data.frame(zhenbao = c("油彩盒"),user = c("柳笑翁")),	
-  data.frame(zhenbao = c("银凰灸针"),user = c("谈允贤")),	
-  data.frame(zhenbao = c("金缠腰"),user = c("向斜阳"))
-  
-)	
+
 ```
 
 ## 5.0 目前珍宝
@@ -317,7 +326,7 @@ df_zhenbao_user_result <- df_user_info %>%
   left_join(df_owned_user %>% mutate(own_tag = 1), by = c("user" = "user")) %>% 
   ## 先只看已有用户
   filter(own_tag == 1) %>% 
-  select(user,user_cat) %>% 
+  select(user,user_cat,user_num) %>% 
   ## 现在用的 
   left_join(owned_user_zhenbao_pair %>% mutate(cur_zb = zhenbao) %>% select(-zhenbao), by = c("user" = "user")) 
 
@@ -341,6 +350,8 @@ df_zhenbao_user_result <- df_zhenbao_user_result %>%
 ## 目前最好方案
 df_zhenbao_user_result <- df_zhenbao_user_result %>% 
   mutate(cur_best = ifelse(sp_zb_tag == 1, sp_zb,cur_zb))
+
+df_zhenbao_user_result
 ```
 
 
@@ -379,41 +390,174 @@ df_zhenbao_property_top2
 ### 5.2.2 用户和属性匹配
 ```{r}
 ## 用户 vs 所有珍宝 - 2个属性都匹配
-df_zhenbao_user_result_property_rn <- df_user_property_top2 %>%
+df_zhenbao_user_result_property_rn <- df_user_property_top2  %>% 
   select(user,u_p_1st,u_p_2nd) %>% 
   left_join(df_zhenbao_property_top2 %>% filter(own_tag == 1), by = c("u_p_1st" = "zb_p_1st", "u_p_2nd" = "zb_p_2nd" )) %>% 
   group_by(user) %>% 
   mutate(rn = row_number(desc(zb_v_1st))) 
 
 df_zhenbao_user_result_property_rn %>% 
-  filter(user == "汤姑")
+  filter(user == "乔沐")
 
 df_zhenbao_user_result_property <- df_zhenbao_user_result_property_rn 
 
 df_zhenbao_user_result_property %>% 
-  filter(user == "汤姑")
+  filter(user == "乔沐")
+
+## 用户 v 天级珍宝 - 2个属性都匹配
+df_zhenbao_user_result_property_rn_tian2 <- df_user_property_top2 %>%
+  select(user,u_p_1st,u_p_2nd) %>%
+  left_join(df_zhenbao_property_top2 %>% filter(own_tag == 1 & cat == "天级珍宝"), by = c("u_p_1st" = "zb_p_1st", "u_p_2nd" = "zb_p_2nd" )) %>%
+  group_by(user) %>%
+  mutate(rn = row_number(desc(zb_v_1st)))
+df_zhenbao_user_result_property_rn_tian2
+
+## 用户 v 天级珍宝 - 1个属性匹配
+df_zhenbao_user_result_property_rn_tian1 <- df_user_property_top2 %>%
+  select(user,u_p_1st,u_p_2nd) %>%
+  left_join(df_zhenbao_property_top2 %>% filter(own_tag == 1 & cat == "天级珍宝"), by = c("u_p_1st" = "zb_p_1st")) %>%
+  group_by(user) %>%
+  mutate(rn = row_number(desc(zb_v_1st)))
+df_zhenbao_user_result_property_rn_tian1
+
+## 用户 v 天级珍宝 - 第2个属性匹配
+df_zhenbao_user_result_property_rn_tian1_2nd <- df_user_property_top2 %>%
+  select(user,u_p_1st,u_p_2nd) %>%
+  left_join(df_zhenbao_property_top2 %>% filter(own_tag == 1 & cat == "天级珍宝"), by = c("u_p_2nd" = "zb_p_2nd")) %>%
+  group_by(user) %>%
+  mutate(rn = row_number(desc(zb_v_2nd)))
+df_zhenbao_user_result_property_rn_tian1_2nd
 ```
 
 
-### 5.2.3 匹配
+## 5.3 概览
 
 
 
 ```{r}
 ## 加上属性匹配珍宝比较
-df_zhenbao_user_result   %>% 
-  # filter(cur_zb == sp_zb)
-  ## 目前已有最佳选择
-  left_join(df_zhenbao_user_result_property %>% filter(rn == 1) %>% mutate(zb_1st = zhenbao)) %>% 
-  # mutate(cur_best = ifelse(coalesce(sp_zb_tag,0) == 1, sp_zb,ifelse(coalesce(own_tag,0) == 1, zhenbao,cur_zb))) %>% 
-  select(user,user_cat,u_p_1st,u_p_2nd,cur_zb,sp_zb,sp_zb_tag,zb_1st)  %>% 
-  
+df_zhenbao_user_result <- df_zhenbao_user_result  %>% 
+  left_join(df_user_property_top2) %>% 
+  select(user,user_cat,user_num,u_p_1st,u_p_2nd,cur_zb,sp_zb,sp_zb_tag) %>% 
+  ## 第一个
+  left_join(df_zhenbao_user_result_property  %>%  filter(rn == 1) %>% mutate(zb_1st = zhenbao)) %>% 
+  select(-zhenbao,-cat,-zb_v_1st,-zb_v_2nd,-own_tag,-rn)  %>% 
+  ## 第二个
   left_join(df_zhenbao_user_result_property %>% filter(rn == 2) %>% select(-u_p_1st,-u_p_2nd) %>% mutate(zb_2nd = zhenbao)) %>% 
-  select(user,user_cat,u_p_1st,u_p_2nd,cur_zb,sp_zb,sp_zb_tag,zb_1st,zb_2nd) 
+  select(-zhenbao,-cat,-zb_v_1st,-zb_v_2nd,-own_tag,-rn)  %>% 
+  ## 天级 2个属性都匹配
+  left_join(df_zhenbao_user_result_property_rn_tian2 %>% filter(rn == 1) %>% select(-u_p_1st,-u_p_2nd) %>% mutate(zb_tian2 = zhenbao) ) %>% 
+  select(-zhenbao,-cat,-zb_v_1st,-zb_v_2nd,-own_tag,-rn)  %>% 
+  ## 天级 1个属性都匹配
+  left_join(df_zhenbao_user_result_property_rn_tian1 %>% filter(rn == 1) %>% select(-u_p_1st,-u_p_2nd) %>% mutate(zb_tian1 = zhenbao) ) %>% 
+  select(-zhenbao,-cat,-zb_p_2nd,-zb_v_1st,-zb_v_2nd,-own_tag,-rn)  %>% 
+  ## 天级 第2个属性匹配
+  left_join(df_zhenbao_user_result_property_rn_tian1_2nd %>% filter(rn == 1) %>% select(-u_p_1st,-u_p_2nd) %>% mutate(zb_tian1_2nd = zhenbao) ) %>% 
+  select(-zhenbao,-cat,-zb_p_1st,-zb_v_1st,-zb_v_2nd,-own_tag,-rn) %>% 
+  arrange(.,user_num) 
+  
+df_zhenbao_user_result %>% filter(user == '乔沐')
+```
 
 
+## 3.5 检查
+
+```{r}
+## 现在用的珍宝
+owned_user_zhenbao_pair <- data.frame(user = c(),zhenbao = c())
+owned_user_zhenbao_pair <- rbind(
+  owned_user_zhenbao_pair,
+  data.frame(user = c("白居易"), zhenbao = c("打神鞭")),
+  data.frame(user = c("百里安"), zhenbao = c("太极图")),
+  data.frame(user = c("百里沉香"), zhenbao = c("缚龙索")),
+  data.frame(user = c("白素贞"), zhenbao = c("缚龙索")),
+  data.frame(user = c("包拯"), zhenbao = c("打神鞭")),
+  data.frame(user = c("程大位"), zhenbao = c("太极图")),
+  data.frame(user = c("常遇春"), zhenbao = c("缚龙索")),
+  data.frame(user = c("东方祚"), zhenbao = c("风火轮")),
+  data.frame(user = c("道济"), zhenbao = c("缚龙索")),
+  data.frame(user = c("端木偃"), zhenbao = c("太极图")),
+  data.frame(user = c("范泊宁"), zhenbao = c("红鸾铜镜")),
+  data.frame(user = c("冯令吉"), zhenbao = c("缚龙索")),
+  data.frame(user = c("天机子") , zhenbao = c("冰玉棋盘")),	
+  data.frame(user = c("公孙策"), zhenbao = c("缚龙索")),
+  data.frame(user = c("宫商羽"), zhenbao = c("广陵散")),
+  data.frame(user = c("黄道婆"), zhenbao = c("琉璃瓶")),
+  data.frame(user = c("红鸾") ,zhenbao = c("红鸾铜镜")),
+  data.frame(user = c("云踏雪"), zhenbao = c("缚龙索")),
+  data.frame(user = c("胡月眉"), zhenbao = c("缚龙索")),
+  data.frame(user = c("李白"), zhenbao = c("李花枝")),
+  data.frame(user = c("刘伯温"), zhenbao = c("打神鞭")),
+  data.frame(user = c("卢璀"), zhenbao = c("曲项琵琶")),
+  data.frame(user = c("卢璨"), zhenbao = c("龙鳞装书籍")),
+  data.frame(user = c("令风来"), zhenbao = c("打神鞭")),
+  data.frame(user = c("罗贯中"), zhenbao = c("天书")),
+  data.frame(user = c("李清照"), zhenbao = c("太极图")),
+  data.frame(user = c("罗素月"), zhenbao = c("缚龙索")),
+  data.frame(user = c("李时珍"), zhenbao = c("凤阳花鼓")),
+  data.frame(user = c("柳笑翁"), zhenbao = c("油彩盒")),	
+  data.frame(user = c("兰心娴"), zhenbao = c("紫铜手炉")),
+  data.frame(user = c("鹿溪隐"), zhenbao = c("太极图")),
+  data.frame(user = c("孟好学"), zhenbao = c("打神鞭")),
+  data.frame(user = c("马蓬瀛"), zhenbao = c("哮天犬")),
+  data.frame(user = c("麦小满"), zhenbao = c("红鸾铜镜")),
+  data.frame(user = c("马远道"), zhenbao = c("风火轮")),
+  data.frame(user = c("孟余"), zhenbao = c("缚龙索")),
+  data.frame(user = c("戚继光"), zhenbao = c("风火轮")),
+  data.frame(user = c("乔沐"), zhenbao = c("打神鞭")),
+  data.frame(user = c("屈原"), zhenbao = c("玉净瓶")),
+  data.frame(user = c("秦挽铮"), zhenbao = c("打神鞭")),
+  data.frame(user = c("秦奚"), zhenbao = c("琉璃瓶")),
+  data.frame(user = c("仇英"), zhenbao = c("汉宫春晓图")),
+  data.frame(user = c("仇珠"), zhenbao = c("风火轮")),
+  data.frame(user = c("沈度"), zhenbao = c("广陵散")),
+  data.frame(user = c("沈括"), zhenbao = c("琉璃瓶")),
+  data.frame(user = c("施耐庵"), zhenbao = c("风火轮")),
+  data.frame(user = c("苏轼"), zhenbao = c("缚龙索")),
+  data.frame(user = c("奢香"), zhenbao = c("打神鞭")),
+  data.frame(user = c("沈周"), zhenbao = c("太极图")),
+  data.frame(user = c("唐伯虎"), zhenbao = c("打神鞭")),
+  data.frame(user = c("谈允贤"), zhenbao = c("银凰灸针")),	
+  data.frame(user = c("王祯"), zhenbao = c("哮天犬")),
+  data.frame(user = c("文俶"), zhenbao = c("哮天犬")),
+  data.frame(user = c("吴承恩"), zhenbao = c("盘盏")),
+  data.frame(user = c("王扶危"), zhenbao = c("太极图")),
+  data.frame(user = c("王昭君"), zhenbao = c("风火轮")),
+  data.frame(user = c("武则天"), zhenbao = c("缚龙索")),
+  data.frame(user = c("薛涛"), zhenbao = c("蛇玲珑")),
+  data.frame(user = c("向斜阳"), zhenbao = c("金缠腰")),
+  data.frame(user = c("玄奘"), zhenbao = c("波若经")),
+  data.frame(user = c("徐祯卿"), zhenbao = c("太极图")),
+  data.frame(user = c("鱼玄机"), zhenbao = c("哮天犬")),
+  data.frame(user = c("杨宗保"), zhenbao = c("打神鞭")),
+  data.frame(user = c("张山归"), zhenbao = c("风火轮")),
+  data.frame(user = c("祝英台"), zhenbao = c("太极图")),
+  data.frame(user = c("展昭"), zhenbao = c("打神鞭")),
+  data.frame(user = c("张择端") , zhenbao = c("清明上河图")),
+  data.frame(user = c("阿朵") , zhenbao = c("风火轮"))
+)	
+
+df_owned_user %>% mutate(own_tag = 1)
+owned_user_list
+```
+
+
+```{r}
+## 专属珍宝已有但未使用
+df_zhenbao_user_result %>% 
+  filter(sp_zb_tag == 1 & !cur_zb == sp_zb) %>% 
+  arrange(.,user_num)
+
+df_zhenbao_user_result %>% 
+  filter(!cur_zb == sp_zb) %>% 
+  select(-user_cat,-user_num,-sp_zb_tag) %>% 
+  mutate(!(cur_zb == sp_zb | cur_zb == zb_1st | cur_zb == zb_2nd | cur_zb == zb_tian2 | cur_zb == zb_tian1 | cur_zb == zb_tian1_2nd))
 
 ```
 
 
+```{r}
+df_zhenbao_all %>% 
+  filter(zhenbao %in% c("太极图","哮天犬","缚龙索","凤阳花鼓","风火轮",'玉净瓶','金缠腰','龙年鞭炮'))
+```
 

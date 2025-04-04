@@ -145,6 +145,9 @@ df <- data.frame(collection_info,href_info) %>%
   mutate(url = paste0('https://wiki.biligame.com',href_info))
 
 head(df)
+
+df %>% 
+  filter(collection_info == '薛涛')
 ```
 
 
@@ -266,8 +269,11 @@ rm(user_desc)
 
 ```{r}
 df_user_info <- df_user_info %>% left_join(df_name_list, by = c('firstHeading' = 'name')) 
+
 df_user_property <- df_user_property %>% 
   mutate(property_degree = factor(property_degree, levels = c('特','优','良','中','差')))
+df_user_property %>% filter(firstHeading == '薛涛'| firstHeading == '干将')
+
 df_user_network 
 ```
 
